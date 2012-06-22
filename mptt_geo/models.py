@@ -97,20 +97,39 @@ class LocationManager(TreeManager):
 # TODO: Add django-versioning here
 class Location(MPTTModel):
     """Base location model"""
-    parent = models.ForeignKey('self', verbose_name=_("Parent node"))
-    type = models.CharField(_("type"), max_length=20,
-                            choices=LOCATION_TYPES, db_index=True)
+    parent = models.ForeignKey(
+        'self',
+        verbose_name=_("Parent node"),
+        blank=True,
+        null=True  # null for top level
+    )
+    type = models.CharField(
+        _("type"),
+        max_length=20,
+        choices=LOCATION_TYPES,
+        db_index=True
+    )
     name = models.CharField(_("Official name"), max_length=255, db_index=True)
+    name_ascii = models.CharField(
+        _("ascii name"),
+        max_length=255,
+        help_text=_("Latin (ascii) transliteration of name"),
+        db_index=True
+    )
     active = models.BooleanField(default=True, db_index=True)
-    creator = models.ForeignKey(User, blank=True, null=True,
-                                on_delete=models.SET_NULL)
+    creator = models.ForeignKey(
+        User,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL
+    )
     body = models.TextField(_("text"), blank=True)
 
     #objects = LocationManager()
 
     class Meta:
         ordering = ['tree_id', 'lft']
-        unique_together = (('parent', 'name', ), )
+        unique_together = (('parent', 'name', ), ('parent', 'name_ascii', ), )
 
     def __unicode__(self):
         return self.name
@@ -129,17 +148,23 @@ class Location(MPTTModel):
                 return attr
         return self
     
-    def get_child_class(self):
+    def get_child_type(self):
+        """Returns child type"""
         if self.type == 'root':
-            return getattr(current_module, 'Country', Location)
+            return 'country'
         if self.type == 'country':
             # for Russia can be added okrug level
             # for USSR also republic
-            return getattr(current_module, 'Region', Location)
+            return 'region'
         if self.type == 'region':
-            return getattr(current_module, 'City', Location)
+            return 'city'
         if self.type == 'city':
-            return getattr(current_module, 'Street', Location)
+            return 'street'
+    
+    def get_child_class(self):
+        """Returns child class"""
+        cls = models.get_model('mptt_geo', self.get_child_type())
+        return cls or Location
 
     def is_allowed(self, perm, user=None):
         """Checks permissions."""

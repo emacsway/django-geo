@@ -4,6 +4,10 @@
 
 {% block head_title %}{% blocktrans %}Locations{% endblocktrans %}{% endblock %}
 
+{% block extra_head %}
+    <script src="{{ STATIC_URL }}admin/js/urlify.js" type="text/javascript"></script>
+{% endblock %}
+
 {% block content %}
 <h1>{{ object }}</h1>
 
@@ -46,6 +50,15 @@
             </fieldset>
         </form>
     </div>
+    <script type="text/javascript">
+        $(function(){
+            $('#id_name').change(function(e){
+                if (!$('#id_name_ascii').val()) {
+                    $('#id_name_ascii').val(downcode($('#id_name').val()));
+                }
+            });
+        });
+    </script>
     {% endif %}
 
 {% endblock %}

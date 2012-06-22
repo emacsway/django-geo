@@ -1,0 +1,51 @@
+{% extends 'geo/base.html' %}
+{% load i18n %}
+{% load uni_form_tags %}
+
+{% block head_title %}{% blocktrans %}Locations{% endblocktrans %}{% endblock %}
+
+{% block content %}
+<h1>{{ object }}</h1>
+
+    <div class="breadcrumb">
+    {% if object %}
+        {% for item in object.get_ancestors %}
+            <a href="{% url geo_location_detail pk=object.id %}">{{ object }}</a> »
+        {% endfor %}
+        {{ object }}
+    {% endif %}
+    </div>
+    <div class="cls"></div>
+    <div>
+    <ul class="firms-list-cats">
+    {% for item in children %}
+        <li>
+            {% if item == new_object %}
+                <b style="font-size: 1.6em;"><a href="{% url geo_location_detail pk=item.id %}">{{ item }}</a> ({% trans "just created" %}!)</b>
+            {% else %}
+                <a href="{% url geo_location_detail pk=item.id %}">{{ item }}</a>
+            {% endif %}
+        </li>
+    {% endfor %}
+    </ul>
+    </div>
+
+    {% if form %}
+    <div>
+        <h2>{% trans "Add new location" %}</h2>
+        
+        <form class="uniForm" method="POST" action="">
+            {% csrf_token %}
+            <fieldset class="inlineLabels">
+                {{ form.media }}
+                {{ form|as_uni_form }}
+                <div class="form_block">
+                    <input type="hidden" name="next" value="{{ request.path }}" />
+                    <input type="submit" value="{% trans "Add new location" %}" /></td>
+                </div>
+            </fieldset>
+        </form>
+    </div>
+    {% endif %}
+
+{% endblock %}

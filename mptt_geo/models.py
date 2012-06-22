@@ -1,13 +1,20 @@
+import sys
 from django.db import models
 from django.core import urlresolvers
-import mptt
-from mptt.models import MPTTModel
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 from django.utils.translation import ugettext as _
+import mptt
+from mptt.models import MPTTModel
+from mptt.managers import TreeManager
+
+current_module = sys.modules[__name__]
 
 LOCATION_TYPES = [
+    ('root', _('root')),
     ('country', _('country'))
+    ('republic', _('republic'))
+    ('okrug', _('okrug'))
     ('region', _('region'))
     ('city', _('city'))
     ('street', _('street'))
@@ -58,7 +65,7 @@ STREET_ABBREVIATED_TYPES = (
 STREET_ABBREVIATED_TYPES_DICT = dict(STREET_ABBREVIATED_TYPES)
 
 
-class LocationManager(models.Manager):
+class LocationManager(TreeManager):
     """ custom manager for locations """
 
     def update_locations(self, obj, locations):
@@ -90,18 +97,20 @@ class LocationManager(models.Manager):
 # TODO: Add django-versioning here
 class Location(MPTTModel):
     """Base location model"""
-    parent = models.ForeignKey('self', blank=True, null=True)
-    type = models.CharField(_("type"), max_length=20, choices=LOCATION_TYPES)
-    name = models.CharField(_("name"), max_length=255)
-    active = models.BooleanField(default=True)
+    parent = models.ForeignKey('self', verbose_name=_("Parent node"))
+    type = models.CharField(_("type"), max_length=20,
+                            choices=LOCATION_TYPES, db_index=True)
+    name = models.CharField(_("Official name"), max_length=255, db_index=True)
+    active = models.BooleanField(default=True, db_index=True)
     creator = models.ForeignKey(User, blank=True, null=True,
                                 on_delete=models.SET_NULL)
-    text = models.TextField(_("text"), blank=True)
+    body = models.TextField(_("text"), blank=True)
 
     #objects = LocationManager()
 
     class Meta:
         ordering = ['tree_id', 'lft']
+        unique_together = (('parent', 'name', ), )
 
     def __unicode__(self):
         return self.name
@@ -119,6 +128,30 @@ class Location(MPTTModel):
             if isinstance(attr, Location) and attr.__class__ != Location:
                 return attr
         return self
+    
+    def get_child_class(self):
+        if self.type == 'root':
+            return getattr(current_module, 'Country', Location)
+        if self.type == 'country':
+            # for Russia can be added okrug level
+            # for USSR also republic
+            return getattr(current_module, 'Region', Location)
+        if self.type == 'region':
+            return getattr(current_module, 'City', Location)
+        if self.type == 'city':
+            return getattr(current_module, 'Street', Location)
+
+    def is_allowed(self, perm, user=None):
+        """Checks permissions."""
+        if perm in ('mptt_geo.view_location',
+                    'mptt_geo.browse_location', ):
+            return True
+        if perm == 'mptt_geo.add_location'.format(add_perm) and self.type in ('region', 'city'):  # allowed to add child cities and streets
+            return True
+        if perm in ('mptt_geo.change_location',
+                    'mptt_geo.delete_location', ):
+            return False
+        return False
 
 
 class Country(Location):
@@ -133,7 +166,8 @@ class City(Location):
         verbose_name=_("Type"),
         max_length=20,
         choices=CITY_TYPES,
-        default='city'
+        default='city',
+        db_index=True
     )
 
 
@@ -142,25 +176,36 @@ class Street(Location):
     street_type = models.CharField(
         verbose_name=_("Type"),
         max_length=20,
-        choices=STREET_TYPES
+        choices=STREET_TYPES,
+        default='street',
+        db_index=True
     )
 
 
 class LocationItem(models.Model):
     location = models.ForeignKey(Location, verbose_name=_("location"), related_name="items")
     content_type = models.ForeignKey(ContentType, related_name="items")
-    object_id = models.PositiveIntegerField()
+    object_id = models.CharField(max_length=255, db_index=True)
     object = generic.GenericForeignKey('content_type', 'object_id')
 
     class Meta:
         unique_together = (('location', 'content_type', 'object_id'),)
-        verbose_name = _("Categorized item")
-        verbose_name_plural = _("Categorized items")
+        verbose_name = _("Location item")
+        verbose_name_plural = _("Location items")
 
     def __unicode__(self):
         return u'%s [%s]' % (self.object, self.location)
 
-try:
-    mptt.register(Location)
-except:
-    pass
+
+def geo_location_new(sender, instance, **kwargs):
+    if isinstance(instance, Location):
+        if notification:
+            notify_list = User.objects.filter(is_active=True, is_superuser=True).all() #.exclude(id__exact=instance.user.id)
+            
+            notification.send(notify_list, "geo_location_new", {
+                "user": instance.creator, 
+                "item": instance,
+                "type": instance.get_type_display(),
+            })
+
+models.signals.post_save.connect(geo_location_new, sender=Location)

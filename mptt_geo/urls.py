@@ -1,5 +1,5 @@
-from django.conf.urls.defaults import *
+from django.conf.urls.defaults import patterns, url
 
-urlpatterns = patterns('categories.views',
-    url(r'(?P<id>[0-9]+)/$', 'category_view', name='category_view'),
+urlpatterns = patterns('mptt_geo.views',
+    url(r'(?:(?P<pk>[0-9]+)/)?$', 'location_detail', name='geo_location_detail'),
 )

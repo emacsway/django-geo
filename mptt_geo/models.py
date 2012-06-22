@@ -100,14 +100,25 @@ class Location(MPTTModel):
 
     #objects = LocationManager()
 
+    class Meta:
+        ordering = ['tree_id', 'lft']
+
     def __unicode__(self):
         return self.name
 
     def get_absolute_url(self):
         return urlresolvers.reverse('location_view', args=[self.pk])
 
-    class Meta:
-        ordering = ['tree_id', 'lft']
+    def get_real(self):  # or get_downcast(self)
+        """returns instance of real class"""
+        return getattr(self, self.type, self)
+        for attr_name in dir(self):
+            if attr_name == 'parent':
+                continue
+            attr = getattr(self, attr_name)
+            if isinstance(attr, Location) and attr.__class__ != Location:
+                return attr
+        return self
 
 
 class Country(Location):
@@ -130,7 +141,7 @@ class Street(Location):
     """Street model"""
     street_type = models.CharField(
         verbose_name=_("Type"),
-        max_length=10,
+        max_length=20,
         choices=STREET_TYPES
     )
 

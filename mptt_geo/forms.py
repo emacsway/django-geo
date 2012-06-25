@@ -6,7 +6,7 @@ from django.utils.translation import ugettext as _
 
 from tree_select.fields import TreeChoiceField
 
-from mptt_geo.models import Location, Country, City, Street
+from mptt_geo.models import Location, Country, Region, City, Street
 
 
 class LocationForm(forms.ModelForm):
@@ -17,7 +17,7 @@ class LocationForm(forms.ModelForm):
 
     class Meta:
         model = Location
-        exclude = ['creator', 'type', 'body', ]
+        exclude = ['creator', 'content_type', 'body', ]
 
 
 class CountryForm(LocationForm):
@@ -25,7 +25,15 @@ class CountryForm(LocationForm):
 
     class Meta:
         model = Country
-        exclude = ['creator', 'type', 'body', ]
+        exclude = ['creator', 'content_type', 'body', ]
+
+
+class RegionForm(LocationForm):
+    """Region form"""
+
+    class Meta:
+        model = Region
+        exclude = ['creator', 'content_type', 'body', ]
 
 
 class CityForm(LocationForm):
@@ -33,7 +41,7 @@ class CityForm(LocationForm):
 
     class Meta:
         model = City
-        exclude = ['creator', 'type', 'body', ]
+        exclude = ['creator', 'content_type', 'body', ]
 
 
 class StreetForm(LocationForm):
@@ -41,4 +49,4 @@ class StreetForm(LocationForm):
 
     class Meta:
         model = Street
-        exclude = ['creator', 'type', 'body', ]
+        exclude = ['creator', 'content_type', 'body', ]

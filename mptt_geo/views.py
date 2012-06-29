@@ -18,10 +18,11 @@ def location_detail(request, pk=None):
     if request.user.has_perm('mptt_geo.add_location', location.get_real()):
         model_class = location.get_real().get_child_class()
         form_class = getattr(forms, '{0}Form'.format(model_class.__name__))
-        form = form_class(request.POST or None, initial={'parent': location.pk, })
+        form = form_class(request.POST or None)
         if request.method == 'POST' and form.is_valid():
             new_location = form.save(commit=False)
             new_location.creator = request.user
+            new_location.parent = location.pk
             # for large trees we can save data asynchronously
             new_location.save()
             form.save_m2m()

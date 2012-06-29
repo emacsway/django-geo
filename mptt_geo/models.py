@@ -8,6 +8,11 @@ import mptt
 from mptt.models import MPTTModel
 from mptt.managers import TreeManager
 
+try:
+    from tree_select.db_fields import TreeForeignKey
+except ImportError:
+    from mptt.fields import TreeForeignKey
+
 current_module = sys.modules[__name__]
 
 CITY_TYPES = (
@@ -88,7 +93,7 @@ class LocationManager(TreeManager):
 class Location(MPTTModel):
     """Base location model"""
     content_type = models.ForeignKey(ContentType, editable=False, null=True)
-    parent = models.ForeignKey(
+    parent = models.TreeForeignKey(
         'Location',
         verbose_name=_("Parent node"),
         blank=True,

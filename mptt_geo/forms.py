@@ -12,12 +12,9 @@ from mptt_geo.models import Location, Country, Region, City, Street
 class LocationForm(forms.ModelForm):
     """Location form"""
 
-    parent = TreeChoiceField('mptt_geo', 'Location', multiple=False,
-                             label=_('Parent node'))
-
     class Meta:
         model = Location
-        exclude = ['creator', 'content_type', 'body', ]
+        exclude = ['creator', 'content_type', 'body', 'parent', ]
 
 
 class CountryForm(LocationForm):
@@ -25,7 +22,7 @@ class CountryForm(LocationForm):
 
     class Meta:
         model = Country
-        exclude = ['creator', 'content_type', 'body', ]
+        exclude = ['creator', 'content_type', 'body', 'parent', ]
 
 
 class RegionForm(LocationForm):
@@ -33,7 +30,7 @@ class RegionForm(LocationForm):
 
     class Meta:
         model = Region
-        exclude = ['creator', 'content_type', 'body', ]
+        exclude = ['creator', 'content_type', 'body', 'parent', ]
 
 
 class CityForm(LocationForm):
@@ -41,7 +38,7 @@ class CityForm(LocationForm):
 
     class Meta:
         model = City
-        exclude = ['creator', 'content_type', 'body', ]
+        exclude = ['creator', 'content_type', 'body', 'parent', ]
 
 
 class StreetForm(LocationForm):
@@ -49,4 +46,4 @@ class StreetForm(LocationForm):
 
     class Meta:
         model = Street
-        exclude = ['creator', 'content_type', 'body', ]
+        exclude = ['creator', 'content_type', 'body', 'parent', ]

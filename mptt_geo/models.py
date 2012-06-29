@@ -1,10 +1,11 @@
 import sys
 from django.db import models
-from django.core import urlresolvers
+from django.conf import settings
+from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
+from django.core import urlresolvers
 from django.utils.translation import ugettext as _
-import mptt
 from mptt.models import MPTTModel
 from mptt.managers import TreeManager
 
@@ -12,6 +13,11 @@ try:
     from tree_select.db_fields import TreeForeignKey
 except ImportError:
     from mptt.fields import TreeForeignKey
+
+if "notification" in settings.INSTALLED_APPS:
+    from notification import models as notification
+else:
+    notification = None
 
 current_module = sys.modules[__name__]
 
@@ -66,14 +72,21 @@ class LocationManager(TreeManager):
     def update_locations(self, obj, locations):
         """ updates the locations for the given object """
         ctype = ContentType.objects.get_for_model(obj)
-        current_location_items = LocationItem.objects.filter(content_type=ctype, object_id=obj.id)
+        current_location_items = LocationItem.objects.filter(
+            content_type=ctype,
+            object_id=obj.id
+        )
 
         # delete LocationItems not present in locations
         current_location_items.exclude(location__in=locations).delete()
 
         # Find what locations to add
         # FIXME: is there any optimized query for this?
-        locations_to_add = self.exclude(items__in=current_location_items).filter(id__in=[c.id for c in locations])
+        locations_to_add = self.exclude(
+            items__in=current_location_items
+        ).filter(
+            id__in=[c.id for c in locations]
+        )
 
         # create categorized items  for this
         for c in locations_to_add:
@@ -92,12 +105,18 @@ class LocationManager(TreeManager):
 # TODO: Add django-versioning here
 class Location(MPTTModel):
     """Base location model"""
-    content_type = models.ForeignKey(ContentType, editable=False, null=True)
-    parent = models.TreeForeignKey(
-        'Location',
+    content_type = models.ForeignKey(
+        ContentType,
+        editable=False,
+        null=True,
+        related_name="%(app_label)s_%(class)s_related"
+    )
+    parent = TreeForeignKey(
+        'self',
         verbose_name=_("Parent node"),
         blank=True,
-        null=True  # null for top level
+        null=True,  # null for top level
+        related_name="children"
     )
     name = models.CharField(_("Official name"), max_length=255, db_index=True)
     name_ascii = models.CharField(
@@ -111,11 +130,13 @@ class Location(MPTTModel):
         User,
         blank=True,
         null=True,
-        on_delete=models.SET_NULL
+        on_delete=models.SET_NULL,
+        related_name="%(app_label)s_%(class)s_related"
     )
     body = models.TextField(_("text"), blank=True)
+    geoname_id = models.IntegerField(unique=True, blank=True, null=True)
 
-    #objects = LocationManager()
+    objects = TreeManager()
 
     class Meta:
         ordering = ['tree_id', 'lft']
@@ -129,27 +150,20 @@ class Location(MPTTModel):
     def save(self, *args, **kwargs):
         """Sets content_type and calls parent method."""
         if not self.content_type:
-            self.content_type = ContentType.objects.get_for_model(self.__class__)
+            self.content_type = ContentType.objects.get_for_model(
+                self.__class__
+            )
         return super(Location, self).save(*args, **kwargs)
 
     def get_absolute_url(self):
-        return urlresolvers.reverse('location_view', args=[self.pk])
+        return urlresolvers.reverse('geo_location_detail', args=[self.pk])
 
     def get_real(self):  # or get_downcast(self)
         """returns instance of real class"""
         model = self.content_type.model_class()
         if model == self.__class__:
             return self
-        return model.objects.get(pk=self.pk) 
-        """
-        for attr_name in dir(self):
-            if attr_name == 'parent':
-                continue
-            attr = getattr(self, attr_name)
-            if isinstance(attr, Location):
-                return attr
-        """
-        return self
+        return model.objects.get(pk=self.pk)
 
     def get_child_class(self):
         """Returns child class"""
@@ -206,7 +220,7 @@ class Region(Location):
         """Checks permissions."""
         if perm == 'mptt_geo.add_location':
             return True
-        return parent(Region, self).is_allowed(perm, user)
+        return super(Region, self).is_allowed(perm, user)
 
 
 class City(Location):
@@ -231,7 +245,7 @@ class City(Location):
         """Checks permissions."""
         if perm == 'mptt_geo.add_location':
             return True
-        return parent(City, self).is_allowed(perm, user)
+        return super(City, self).is_allowed(perm, user)
 
 
 class Street(Location):
@@ -256,14 +270,21 @@ class Street(Location):
         """Checks permissions."""
         if perm == 'mptt_geo.add_location':
             return False
-        return parent(Street, self).is_allowed(perm, user)
+        return super(Street, self).is_allowed(perm, user)
 
 
 class LocationItem(models.Model):
-    location = models.ForeignKey(Location, verbose_name=_("location"), related_name="items")
-    content_type = models.ForeignKey(ContentType, related_name="items")
+    location = models.ForeignKey(
+        Location,
+        verbose_name=_("location"),
+        related_name="location_items"
+    )
+    content_type = models.ForeignKey(
+        ContentType,
+        related_name="geo_location_items"
+    )
     object_id = models.CharField(max_length=255, db_index=True)
-    object = generic.GenericForeignKey('content_type', 'object_id')
+    content_object = generic.GenericForeignKey('content_type', 'object_id')
 
     class Meta:
         unique_together = (('location', 'content_type', 'object_id'),)
@@ -273,16 +294,25 @@ class LocationItem(models.Model):
     def __unicode__(self):
         return u'%s [%s]' % (self.object, self.location)
 
+# Temporary fixing for MPTT & MTI
+# https://github.com/django-mptt/django-mptt/issues/197
+Location._tree_manager._base_manager = None
+
 
 def geo_location_new(sender, instance, **kwargs):
     if isinstance(instance, Location):
         if notification:
-            notify_list = User.objects.filter(is_active=True, is_superuser=True).all() #.exclude(id__exact=instance.user.id)
+            notify_list = User.objects.filter(
+                is_active=True,
+                is_superuser=True
+            ).exclude(
+                id__exact=instance.creator.id
+            )
 
             notification.send(notify_list, "geo_location_new", {
-                "user": instance.creator, 
+                "user": instance.creator,
                 "item": instance,
-                "type": instance.get_type_display(),
+                "type": instance._meta.verbose_name,
             })
 
 models.signals.post_save.connect(geo_location_new, sender=Location)

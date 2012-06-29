@@ -1,6 +1,8 @@
+from django.conf import settings
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template.context import RequestContext
+from django.utils.translation import ugettext as _
 
 from mptt_geo.models import Location
 from mptt_geo import forms
@@ -27,11 +29,12 @@ def location_detail(request, pk=None):
             new_location.save()
             form.save_m2m()
             form = form_class(None, initial={'parent': location.pk, })
-            messages.info(request, _("Information has been updated successfully."))
+            messages.info(request,
+                          _("Information has been updated successfully."))
 
     # New children already saved, so now get children
     children = location.get_children().filter(active=True)
-        
+
     return render_to_response(
         'geo/location_detail.html',
         RequestContext(request, {

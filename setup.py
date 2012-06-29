@@ -16,7 +16,7 @@ setup(
 
     author = "Ivan Zakrevsky",
     author_email = "ivzak@yandex.ru",
-    description = "Django MPTT categories.",
+    description = "Django MPTT geo.",
     long_description=open(os.path.join(os.path.dirname(__file__), 'README')).read(),
     license = "BSD License",
     keywords = "django",

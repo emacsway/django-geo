@@ -2,4 +2,4 @@
 
 {% blocktrans %}{{ user }} has added new geo classified item {{ item }} of {{ type }} {% endblocktrans %}
 
-{# Link: http://{{ current_site }}{{ topic.get_absolute_url }} #}
+{# Link: http://{{ current_site }}{{ item.get_absolute_url }} #}

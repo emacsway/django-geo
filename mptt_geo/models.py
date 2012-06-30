@@ -65,6 +65,15 @@ STREET_ABBREVIATED_TYPES = (
 
 STREET_ABBREVIATED_TYPES_DICT = dict(STREET_ABBREVIATED_TYPES)
 
+GEONAME_NONEXISTENT = 0
+GEONAME_EXISTENT = 1
+GEONAME_INDEPENDENT = 2
+
+GEONAME_STATUSES = (
+    (GEONAME_NONEXISTENT, _('nonexistent'), ),
+    (GEONAME_EXISTENT, _('existent'), ),
+    (GEONAME_INDEPENDENT, _('independent'), ),
+)
 
 class LocationManager(TreeManager):
     """ custom manager for locations """
@@ -134,7 +143,18 @@ class Location(MPTTModel):
         related_name="%(app_label)s_%(class)s_related"
     )
     body = models.TextField(_("text"), blank=True)
-    geoname_id = models.IntegerField(unique=True, blank=True, null=True)
+    geoname_id = models.PositiveIntegerField(
+        unique=True,
+        blank=True,
+        null=True
+    )
+    geoname_status = models.PositiveSmallIntegerField(
+        db_index=True,
+        blank=True,
+        null=True,
+        default=GEONAME_NONEXISTENT,
+        choices=GEONAME_STATUSES
+    )
 
     objects = TreeManager()
 
@@ -305,9 +325,11 @@ def geo_location_new(sender, instance, **kwargs):
             notify_list = User.objects.filter(
                 is_active=True,
                 is_superuser=True
-            ).exclude(
-                id__exact=instance.creator.id
             )
+            if instance.creator:
+                notify_list = notify_list.exclude(
+                    id__exact=instance.creator.id
+                )
 
             notification.send(notify_list, "geo_location_new", {
                 "user": instance.creator,

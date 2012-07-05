@@ -1,5 +1,6 @@
 import sys
 from django.db import models
+from django.db.models.query import QuerySet
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
@@ -75,8 +76,28 @@ GEONAME_STATUSES = (
     (GEONAME_INDEPENDENT, _('independent'), ),
 )
 
+
+class RealQuerySet(QuerySet):
+    """Custom QuerySet for real instances."""
+
+    def __getitem__(self, k):
+        result = super(RealQuerySet, self).__getitem__(k)
+        if isinstance(result, models.Model) :
+            return result.get_real()
+        else:
+            return result
+
+    def __iter__(self):
+        for item in super(RealQuerySet, self).__iter__():
+            yield item.get_real()
+
+
 class LocationManager(TreeManager):
-    """ custom manager for locations """
+    """Custom manager for locations """
+
+    def get_query_set(self):
+        """Returns a new QuerySet object."""
+        return RealQuerySet(self.model, using=self._db)
 
     def update_locations(self, obj, locations):
         """ updates the locations for the given object """
@@ -162,7 +183,7 @@ class Location(MPTTModel):
         choices=GEONAME_STATUSES
     )
 
-    objects = TreeManager()
+    objects = LocationManager()
 
     class Meta:
         ordering = ['tree_id', 'lft']
@@ -197,14 +218,14 @@ class Location(MPTTModel):
             return models.get_model(*self.child_class.rsplit('.', 1))
         return models.get_model('mptt_geo', 'country')
 
-    def get_children(self):
+    def get_children_tmp(self):
         """Fix for MTI"""
         if self.__class__ != Location:  # It's a sub-model
-            return Location.get_children(self)
+            return Location.get_children(self.location_ptr)
         else:
             return super(Location, self).get_children()
 
-    def is_allowed(self, perm, user=None):
+    def is_allowed(self, user, perm=None):
         """Checks permissions."""
         if perm in ('mptt_geo.view_location',
                     'mptt_geo.browse_location', ):
@@ -248,7 +269,7 @@ class Region(Location):
             return models.get_model(*self.child_class.rsplit('.', 1))
         return models.get_model('mptt_geo', 'city')
 
-    def is_allowed(self, perm, user=None):
+    def is_allowed(self, user, perm=None):
         """Checks permissions."""
         if perm == 'mptt_geo.add_location':
             return user.is_authenticated()
@@ -269,13 +290,19 @@ class City(Location):
         verbose_name = _("city")
         verbose_name_plural = _("cities")
 
+    def __unicode__(self):
+        return '{0} {1}'.format(
+            CITY_ABBREVIATED_TYPES_DICT.get(self.city_type),
+            self.name
+        )
+
     def get_child_class(self):
         """Returns child class"""
         if self.child_class:
             return models.get_model(*self.child_class.rsplit('.', 1))
         return models.get_model('mptt_geo', 'street')
 
-    def is_allowed(self, perm, user=None):
+    def is_allowed(self, user, perm=None):
         """Checks permissions."""
         if perm == 'mptt_geo.add_location':
             return user.is_authenticated()
@@ -296,13 +323,19 @@ class Street(Location):
         verbose_name = _("street")
         verbose_name_plural = _("streets")
 
+    def __unicode__(self):
+        return '{0} {1}'.format(
+            STREET_ABBREVIATED_TYPES_DICT.get(self.street_type),
+            self.name
+        )
+
     def get_child_class(self):
         """Returns child class"""
         if self.child_class:
             return models.get_model(*self.child_class.rsplit('.', 1))
         return None
 
-    def is_allowed(self, perm, user=None):
+    def is_allowed(self, user, perm=None):
         """Checks permissions."""
         if perm == 'mptt_geo.add_location':
             return False

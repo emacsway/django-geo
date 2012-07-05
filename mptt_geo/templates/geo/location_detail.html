@@ -14,7 +14,7 @@
     <div class="breadcrumb">
     {% if object %}
         {% for item in object.get_ancestors %}
-            <a href="{% url geo_location_detail pk=object.id %}">{{ object }}</a> »
+            <a href="{% url geo_location_detail pk=item.id %}">{{ item }}</a> »
         {% endfor %}
         {{ object }}
     {% endif %}
@@ -37,7 +37,7 @@
         <ul>
         {% for item in children %}
             <li>
-                {% if item == new_object %}
+                {% if item.pk == new_object.pk %}
                     <b style="font-size: 1.6em;"><a href="{% url geo_location_detail pk=item.id %}">{{ item }}</a> ({% trans "just created" %}!)</b>
                 {% else %}
                     <a href="{% url geo_location_detail pk=item.id %}">{{ item }}</a>

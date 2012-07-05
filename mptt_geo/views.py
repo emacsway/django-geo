@@ -30,7 +30,7 @@ def location_detail(request, pk=None):
             form.save_m2m()
             form = form_class(None, initial={'parent': location.pk, })
             messages.info(request,
-                          _("Information has been updated successfully."))
+                          _("Information has been saved successfully."))
 
     # New children already saved, so now get children
     children = location.get_children().filter(active=True)
@@ -38,6 +38,8 @@ def location_detail(request, pk=None):
         'geo/location_detail.html',
         RequestContext(request, {
             'object': location,
+            'opts': location._meta,
+            'child_opts': model_class and model_class._meta,
             'new_object': new_location,
             'children': children,
             'form': form,

@@ -20,7 +20,7 @@
     {% endif %}
     </div>
 
-    <h1>{{ object }}</h1>
+    <h1>{{ object }} ({{ opts.verbose_name }})</h1>
     {% if user.is_authenticated %}
     <div class="form-toggle">
         <p><span id="flag-toggle">{% silk "flag_red" %}{% trans "Flag as incorrect" %}</span></p>
@@ -32,13 +32,13 @@
 
 
     {% if children %}
-    <h2>{% trans "Subitems" %}</h2>
+    <h2>{% blocktrans with type_name_plural=child_opts.verbose_name_plural %}Subitems ({{ type_name_plural }}){% endblocktrans %}</h2>
     <div>
         <ul>
         {% for item in children %}
             <li>
                 {% if item.pk == new_object.pk %}
-                    <b style="font-size: 1.6em;"><a href="{% url geo_location_detail pk=item.id %}">{{ item }}</a> ({% trans "just created" %}!)</b>
+                    <b style="font-size: 1.6em;"><a href="{% url geo_location_detail pk=item.id %}">{{ item }}</a> ({% trans "just created!" %})</b>
                 {% else %}
                     <a href="{% url geo_location_detail pk=item.id %}">{{ item }}</a>
                 {% endif %}
@@ -50,7 +50,7 @@
 
     {% if form %}
     <div>
-        <h2>{% trans "Add new child location" %}</h2>
+        <h2>{% blocktrans with type_name=child_opts.verbose_name %}Add new child location ({{ type_name }}){% endblocktrans %}</h2>
         
         <form class="uniForm" method="POST" action="">
             {% csrf_token %}

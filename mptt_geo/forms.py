@@ -1,48 +1,56 @@
 from django import forms
+from django.conf import settings
 
 from mptt_geo.models import Location, Country, Region, City, Street
+
+if 'modeltranslation' in settings.INSTALLED_APPS:
+    from modeltranslation.translator import translator
+else:
+    translator = None
+
+base_exclude = ['content_type', 'parent', 'active', 'creator', 'body',
+                'child_class', 'geoname_id', 'geoname_status', ]
+
+if translator:
+    trans_opts = translator.get_options_for_model(Location)
+    if 'body' in trans_opts.fields:
+        base_exclude += trans_opts.localized_fieldnames['body']
+
+
+class MetaBase:
+    exclude = base_exclude
 
 
 class LocationForm(forms.ModelForm):
     """Location form"""
 
-    class Meta:
+    class Meta(MetaBase):
         model = Location
-        exclude = ['creator', 'content_type', 'body', 'parent', 'child_class',
-                   'geoname_id', 'geoname_status', ]
 
 
 class CountryForm(LocationForm):
     """Country form"""
 
-    class Meta:
+    class Meta(MetaBase):
         model = Country
-        exclude = ['creator', 'content_type', 'body', 'parent', 'child_class',
-                   'geoname_id', 'geoname_status', ]
 
 
 class RegionForm(LocationForm):
     """Region form"""
 
-    class Meta:
+    class Meta(MetaBase):
         model = Region
-        exclude = ['creator', 'content_type', 'body', 'parent', 'child_class',
-                   'geoname_id', 'geoname_status', ]
 
 
 class CityForm(LocationForm):
     """City form"""
 
-    class Meta:
+    class Meta(MetaBase):
         model = City
-        exclude = ['creator', 'content_type', 'body', 'parent', 'child_class',
-                   'geoname_id', 'geoname_status', ]
 
 
 class StreetForm(LocationForm):
     """Street form"""
 
-    class Meta:
+    class Meta(MetaBase):
         model = Street
-        exclude = ['creator', 'content_type', 'body', 'parent', 'child_class',
-                   'geoname_id', 'geoname_status', ]

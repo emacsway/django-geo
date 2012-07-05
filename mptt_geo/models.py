@@ -143,16 +143,16 @@ class Location(MPTTModel):
     )
     parent = TreeForeignKey(
         'self',
-        verbose_name=_("Parent node"),
+        verbose_name=_("parent node"),
         blank=True,
         null=True,  # null for top level
         related_name="children"
     )
-    name = models.CharField(_("Official name"), max_length=255, db_index=True)
+    name = models.CharField(_("official name"), max_length=255, db_index=True)
     name_ascii = models.CharField(
         _("ascii name"),
         max_length=255,
-        help_text=_("Latin (ascii) transliteration of name"),
+        help_text=_("latin (ascii) transliteration of name"),
         db_index=True
     )
     active = models.BooleanField(default=True, db_index=True)
@@ -164,7 +164,7 @@ class Location(MPTTModel):
         related_name="%(app_label)s_%(class)s_related"
     )
     child_class = models.CharField(
-        _("Child class"),
+        _("child class"),
         max_length=80,
         blank=True,
         db_index=True
@@ -244,7 +244,7 @@ class Country(Location):
     iso_alpha3 = models.CharField(max_length=3, unique=True)
 
     class Meta:
-        verbose_name = _("counntry")
+        verbose_name = _("country")
         verbose_name_plural = _("countries")
 
     def get_child_class(self):

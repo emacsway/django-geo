@@ -25,6 +25,18 @@ msgstr "пр."
 msgid "st."
 msgstr "ул."
 
+msgid "country"
+msgstr "страна"
+
+msgid "countries"
+msgstr "страны"
+
+msgid "region"
+msgstr "регион"
+
+msgid "regions"
+msgstr "регионы"
+
 #: models.py:24
 #: models.py:28
 msgid "city"
@@ -188,4 +200,31 @@ msgstr "поселок"
 
 msgid "farm"
 msgstr "хутор"
+
+msgid "Locations"
+msgstr "Расположение"
+
+msgid "Subitems (%(type_name_plural)s)"
+msgstr "Подпункты (%(type_name_plural)s)"
+
+msgid "Add new child location (%(type_name)s)"
+msgstr "Добавить новое вложенное расположение (%(type_name)s)"
+
+msgid "just created!"
+msgstr "только что создано!"
+
+msgid "Information has been saved successfully."
+msgstr "Информация была успешно сохранена."
+
+msgid "official name"
+msgstr "официальное название"
+
+msgid "ascii name"
+msgstr "ascii название"
+
+msgid "latin (ascii) transliteration of name"
+msgstr "латинская (ascii) транслитерация названия"
+
+msgid "Add new location"
+msgstr "Добавить новое расположение"
 

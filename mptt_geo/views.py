@@ -24,7 +24,7 @@ def location_detail(request, pk=None):
         if request.method == 'POST' and form.is_valid():
             new_location = form.save(commit=False)
             new_location.creator = request.user
-            new_location.parent = location.pk
+            new_location.parent = location
             # for large trees we can save data asynchronously
             new_location.save()
             form.save_m2m()

@@ -142,6 +142,12 @@ class Location(MPTTModel):
         on_delete=models.SET_NULL,
         related_name="%(app_label)s_%(class)s_related"
     )
+    child_class = models.CharField(
+        _("Child class"),
+        max_length=80,
+        blank=True,
+        db_index=True
+    )
     body = models.TextField(_("text"), blank=True)
     geoname_id = models.PositiveIntegerField(
         unique=True,
@@ -187,6 +193,8 @@ class Location(MPTTModel):
 
     def get_child_class(self):
         """Returns child class"""
+        if self.child_class:
+            return models.get_model(*self.child_class.rsplit('.', 1))
         return models.get_model('mptt_geo', 'country')
 
     def get_children(self):
@@ -222,6 +230,8 @@ class Country(Location):
         """Returns child class"""
         # for Russia can be added okrug level
         # for USSR also republic
+        if self.child_class:
+            return models.get_model(*self.child_class.rsplit('.', 1))
         return models.get_model('mptt_geo', 'region')
 
 
@@ -234,12 +244,14 @@ class Region(Location):
 
     def get_child_class(self):
         """Returns child class"""
+        if self.child_class:
+            return models.get_model(*self.child_class.rsplit('.', 1))
         return models.get_model('mptt_geo', 'city')
 
     def is_allowed(self, perm, user=None):
         """Checks permissions."""
         if perm == 'mptt_geo.add_location':
-            return True
+            return user.is_authenticated()
         return super(Region, self).is_allowed(perm, user)
 
 
@@ -259,12 +271,14 @@ class City(Location):
 
     def get_child_class(self):
         """Returns child class"""
+        if self.child_class:
+            return models.get_model(*self.child_class.rsplit('.', 1))
         return models.get_model('mptt_geo', 'street')
 
     def is_allowed(self, perm, user=None):
         """Checks permissions."""
         if perm == 'mptt_geo.add_location':
-            return True
+            return user.is_authenticated()
         return super(City, self).is_allowed(perm, user)
 
 
@@ -284,6 +298,8 @@ class Street(Location):
 
     def get_child_class(self):
         """Returns child class"""
+        if self.child_class:
+            return models.get_model(*self.child_class.rsplit('.', 1))
         return None
 
     def is_allowed(self, perm, user=None):

@@ -8,8 +8,8 @@ class LocationForm(forms.ModelForm):
 
     class Meta:
         model = Location
-        exclude = ['creator', 'content_type', 'body', 'parent', 'geoname_id',
-                   'geoname_status', ]
+        exclude = ['creator', 'content_type', 'body', 'parent', 'child_class',
+                   'geoname_id', 'geoname_status', ]
 
 
 class CountryForm(LocationForm):
@@ -17,8 +17,8 @@ class CountryForm(LocationForm):
 
     class Meta:
         model = Country
-        exclude = ['creator', 'content_type', 'body', 'parent', 'geoname_id',
-                   'geoname_status', ]
+        exclude = ['creator', 'content_type', 'body', 'parent', 'child_class',
+                   'geoname_id', 'geoname_status', ]
 
 
 class RegionForm(LocationForm):
@@ -26,8 +26,8 @@ class RegionForm(LocationForm):
 
     class Meta:
         model = Region
-        exclude = ['creator', 'content_type', 'body', 'parent', 'geoname_id',
-                   'geoname_status', ]
+        exclude = ['creator', 'content_type', 'body', 'parent', 'child_class',
+                   'geoname_id', 'geoname_status', ]
 
 
 class CityForm(LocationForm):
@@ -35,8 +35,8 @@ class CityForm(LocationForm):
 
     class Meta:
         model = City
-        exclude = ['creator', 'content_type', 'body', 'parent', 'geoname_id',
-                   'geoname_status', ]
+        exclude = ['creator', 'content_type', 'body', 'parent', 'child_class',
+                   'geoname_id', 'geoname_status', ]
 
 
 class StreetForm(LocationForm):
@@ -44,5 +44,5 @@ class StreetForm(LocationForm):
 
     class Meta:
         model = Street
-        exclude = ['creator', 'content_type', 'body', 'parent', 'geoname_id',
-                   'geoname_status', ]
+        exclude = ['creator', 'content_type', 'body', 'parent', 'child_class',
+                   'geoname_id', 'geoname_status', ]

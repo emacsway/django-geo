@@ -9,19 +9,15 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: management.py:10
 msgid "Geo classified new item"
 msgstr "Новый пункт географического классификатора"
 
-#: management.py:11
 msgid "a new geo classified item has been created"
 msgstr "Новый пункт географического классификатора успешно создан"
 
-#: models.py:17
 msgid "ave."
 msgstr "пр."
 
-#: models.py:18
 msgid "st."
 msgstr "ул."
 
@@ -37,118 +33,75 @@ msgstr "регион"
 msgid "regions"
 msgstr "регионы"
 
-#: models.py:24
-#: models.py:28
 msgid "city"
 msgstr "город"
 
-#: models.py:29
 msgid "cities"
 msgstr "города"
 
-#: models.py:46
 msgid "Type"
 msgstr "Тип"
 
-#: models.py:47
-#: models.py:51
 msgid "street"
 msgstr "улица"
 
-#: models.py:52
 msgid "streets"
 msgstr "улицы"
 
-#: models.py:52
 msgid "passage"
 msgstr "проезд"
 
-#: templates/cities/regions/view.html:7
 msgid "Region"
 msgstr "Область"
 
-#: templates/cities/regions/view.html:7
 msgid "Area"
 msgstr "Область"
 
-#: templates/cities/regions/view.html:10
-#: templates/cities/cities/view.html:10
-#: templates/cities/countries/list.html:7
-#: templates/cities/countries/list.html:10
-#: templates/cities/countries/view.html:10
-#: templates/cities/streets/view.html:10
 msgid "Countries"
 msgstr "Страны"
 
-#: templates/cities/regions/view.html:21
-#: templates/cities/cities/view.html:22
-#: templates/cities/countries/list.html:15
-#: templates/cities/countries/view.html:20
 msgid "The list of sub-items is empty "
 msgstr "Список вложенных пунктов пуст"
 
-#: templates/cities/regions/view.html:30
 msgid "Add city"
 msgstr "Добавить город"
 
-#: templates/cities/cities/edit.html:7
 msgid "Edit City?"
 msgstr "Редактировать город?"
 
-#: templates/cities/cities/edit.html:10
 msgid "Edit City information"
 msgstr "Редактировать информацию о городе"
 
-#: templates/cities/cities/edit.html:14
-#: templates/cities/cities/new.html:17
-#: templates/cities/streets/edit.html:14
-#: templates/cities/streets/new.html:17
 msgid "Save"
 msgstr "Сохранить"
 
-#: templates/cities/cities/new.html:8
-#: templates/cities/cities/new.html:11
-#: templates/cities/cities/new_success.html:7
 msgid "Add new city"
 msgstr "Добавить новый город"
 
-#: templates/cities/cities/new_success.html:10
-#: templates/cities/streets/new_success.html:10
 msgid "Information has been successfull saved!"
 msgstr "Информациия успешно сохранена"
 
-#: templates/cities/cities/view.html:7
 msgid "City"
 msgstr "Город"
 
-#: templates/cities/cities/view.html:30
 msgid "Add street"
 msgstr "Добавать улицу"
 
-#: templates/cities/countries/view.html:7
 msgid "Country"
 msgstr "Страна"
 
-#: templates/cities/streets/edit.html:7
 msgid "Edit Street"
 msgstr "Редактировать улицу"
 
-#: templates/cities/streets/edit.html:10
 msgid "Edit Street information"
 msgstr "Редактировать информацию об улице"
 
-#: templates/cities/streets/new.html:8
-#: templates/cities/streets/new.html:11
-#: templates/cities/streets/new_success.html:7
 msgid "Add new street"
 msgstr "Добавить новую улицу"
 
-#: templates/cities/streets/view.html:7
 msgid "Street"
 msgstr "Улица"
 
-#: templates/notification/geo_classified_new/notice.html:4
-#, python-format
 msgid ""
 "\n"
 "    <a href=\"%(user_url)s\">%(user)s</a> has added new geo classified item\n"
@@ -158,13 +111,9 @@ msgstr ""
 "    <a href=\"%(user_url)s\">%(user)s</a> добавил новый пункт географического классификатора\n"
 "    '<a href=\"%(item_url)s\">%(item)s</a>' в %(type)s.\n"
 
-#: views/cities_view.py:36
-#: views/streets_view.py:33
 msgid "Information has been added successfully."
 msgstr "Информация успешно добавлена."
 
-#: views/cities_view.py:64
-#: views/streets_view.py:61
 msgid "Information has been updated successfully."
 msgstr "Информация успешно обновлена."
 

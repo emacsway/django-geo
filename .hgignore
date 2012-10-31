@@ -8,7 +8,8 @@
 ^\.\#
 ^\#
 ^etags$
-^.ropeproject/
+^\.ropeproject/
+^mptt_geo/\.ropeproject$
 ^\.project$
 ^\.pydevproject$
 ^\.settings/

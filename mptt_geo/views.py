@@ -1,18 +1,15 @@
-from django.conf import settings
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template.context import RequestContext
 from django.utils.translation import ugettext as _
 
-from mptt_geo.models import Location
-from mptt_geo import forms
-
-LOCATION_ROOT = getattr(settings, 'GEO_LOCATION_ROOT', 1)
+from .models import Location
+from . import forms, settings
 
 
 def location_detail(request, pk=None):
     """Shows detail info for given location"""
-    pk = pk or LOCATION_ROOT
+    pk = pk or settings.LOCATION_ROOT
     location = get_object_or_404(Location, pk=pk, active=True).get_real()
     new_location = None
     form = None

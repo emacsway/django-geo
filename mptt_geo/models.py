@@ -365,7 +365,7 @@ class LocationItem(models.Model):
 
 # Temporary fixing for MPTT & MTI
 # https://github.com/django-mptt/django-mptt/issues/197
-Location._tree_manager._base_manager = None
+# Location._tree_manager._base_manager = None
 
 
 def geo_location_new(sender, instance, **kwargs):

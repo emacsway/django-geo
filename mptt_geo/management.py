@@ -1,11 +1,8 @@
-from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models import signals, get_app
 from django.utils.translation import ugettext_noop as _
 from . import models
 from .models import Location
-
-LOCATION_ROOT = getattr(settings, 'GEO_LOCATION_ROOT', 1)
 
 try:
     notification = get_app('notification')
@@ -24,15 +21,17 @@ except ImproperlyConfigured:
 
 
 def create_root_node(app, created_models, verbosity, **kwargs):
+    from . import settings
     try:
-        Location.objects.get(pk=LOCATION_ROOT)
+        Location.objects.get(pk=settings.LOCATION_ROOT)
     except Location.DoesNotExist:
-        Location(**{
-            'id': LOCATION_ROOT,
+        root = Location(**{
             'parent': None,
             'name': 'Location',
             'name_ascii': 'Location',
             'active': True,
-        }).save()
+        })
+        root.save()
+        settings.CATEGORY_ROOT = root.pk
 
 signals.post_syncdb.connect(create_root_node, sender=models)

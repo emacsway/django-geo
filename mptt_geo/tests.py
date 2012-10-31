@@ -94,3 +94,92 @@ class GeoAdminTest(TestCase):
             response,
             'Ukraine',
         )
+
+    def test_admin_index(self):
+        response = self.client.get(urlresolvers.reverse('admin:index'))
+        self.assertEqual(response.status_code, 200)
+
+        self.assertContains(
+            response,
+            urlresolvers.reverse('admin:mptt_geo_location_changelist')
+        )
+        self.assertContains(
+            response,
+            urlresolvers.reverse('admin:mptt_geo_location_add')
+        )
+
+        self.assertContains(
+            response,
+            urlresolvers.reverse('admin:mptt_geo_country_changelist')
+        )
+        self.assertContains(
+            response,
+            urlresolvers.reverse('admin:mptt_geo_country_add')
+        )
+
+        self.assertContains(
+            response,
+            urlresolvers.reverse('admin:mptt_geo_region_changelist')
+        )
+        self.assertContains(
+            response,
+            urlresolvers.reverse('admin:mptt_geo_region_add')
+        )
+
+        self.assertContains(
+            response,
+            urlresolvers.reverse('admin:mptt_geo_city_changelist')
+        )
+        self.assertContains(
+            response,
+            urlresolvers.reverse('admin:mptt_geo_city_add')
+        )
+
+        self.assertContains(
+            response,
+            urlresolvers.reverse('admin:mptt_geo_street_changelist')
+        )
+        self.assertContains(
+            response,
+            urlresolvers.reverse('admin:mptt_geo_street_add')
+        )
+
+    def test_admin_location_add(self):
+        response = self.client.get(
+            urlresolvers.reverse('admin:mptt_geo_location_add')
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="name"')
+        self.assertContains(response, 'name="creator"')
+
+    def test_admin_country_add(self):
+        response = self.client.get(
+            urlresolvers.reverse('admin:mptt_geo_country_add')
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="name"')
+        self.assertContains(response, 'name="creator"')
+
+    def test_admin_region_add(self):
+        response = self.client.get(
+            urlresolvers.reverse('admin:mptt_geo_region_add')
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="name"')
+        self.assertContains(response, 'name="creator"')
+
+    def test_admin_city_add(self):
+        response = self.client.get(
+            urlresolvers.reverse('admin:mptt_geo_city_add')
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="name"')
+        self.assertContains(response, 'name="creator"')
+
+    def test_admin_street_add(self):
+        response = self.client.get(
+            urlresolvers.reverse('admin:mptt_geo_street_add')
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="name"')
+        self.assertContains(response, 'name="creator"')

@@ -1,3 +1,4 @@
+from __future__ import absolute_import, unicode_literals
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template.context import RequestContext
@@ -15,7 +16,8 @@ def location_detail(request, pk=None):
     form = None
 
     model_class = location.get_child_class()
-    if model_class and request.user.has_perm('mptt_geo.add_location', location):
+    if model_class and request.user.has_perm('mptt_geo.add_location',
+                                             location):
         form_class = getattr(forms, '{0}Form'.format(model_class.__name__))
         form = form_class(request.POST or None)
         if request.method == 'POST' and form.is_valid():

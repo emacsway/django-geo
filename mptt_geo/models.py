@@ -1,3 +1,4 @@
+from __future__ import absolute_import, unicode_literals
 import sys
 from django.db import models
 from django.db.models.query import QuerySet
@@ -19,6 +20,11 @@ if "notification" in settings.INSTALLED_APPS:
     from notification import models as notification
 else:
     notification = None
+
+try:
+    str = unicode  # Python 2.* compatible
+except NameError:
+    pass
 
 current_module = sys.modules[__name__]
 
@@ -82,7 +88,7 @@ class RealQuerySet(QuerySet):
 
     def __getitem__(self, k):
         result = super(RealQuerySet, self).__getitem__(k)
-        if isinstance(result, models.Model) :
+        if isinstance(result, models.Model):
             return result.get_real()
         else:
             return result
@@ -191,8 +197,11 @@ class Location(MPTTModel):
         verbose_name = _("location")
         verbose_name_plural = _("locations")
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
+
+    def __bytes__(self):
+        return str(self).encode('utf-8')
 
     def save(self, *args, **kwargs):
         """Sets content_type and calls parent method."""
@@ -290,7 +299,7 @@ class City(Location):
         verbose_name = _("city")
         verbose_name_plural = _("cities")
 
-    def __unicode__(self):
+    def __str__(self):
         return '{0} {1}'.format(
             CITY_ABBREVIATED_TYPES_DICT.get(self.city_type),
             self.name
@@ -323,7 +332,7 @@ class Street(Location):
         verbose_name = _("street")
         verbose_name_plural = _("streets")
 
-    def __unicode__(self):
+    def __str__(self):
         return '{0} {1}'.format(
             STREET_ABBREVIATED_TYPES_DICT.get(self.street_type),
             self.name
@@ -360,8 +369,11 @@ class LocationItem(models.Model):
         verbose_name = _("Location item")
         verbose_name_plural = _("Location items")
 
-    def __unicode__(self):
-        return u'%s [%s]' % (self.object, self.location)
+    def __str__(self):
+        return '{0} [{1}]'.format(self.object, self.location)
+
+    def __bytes__(self):
+        return str(self).encode('utf-8')
 
 # Temporary fixing for MPTT & MTI
 # https://github.com/django-mptt/django-mptt/issues/197
@@ -387,3 +399,13 @@ def geo_location_new(sender, instance, **kwargs):
             })
 
 models.signals.post_save.connect(geo_location_new, sender=Location)
+
+# Python 2.* compatible
+try:
+    unicode
+except NameError:
+    pass
+else:
+    for cls in (Location, City, Street, LocationItem, ):
+        cls.__unicode__ = cls.__str__
+        cls.__str__ = cls.__bytes__

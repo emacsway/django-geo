@@ -246,7 +246,7 @@ class City(Location):
 
     def __str__(self):
         return '{0} {1}'.format(
-            CITY_ABBREVIATED_TYPES_DICT.get(self.city_type),
+            self.get_city_type_display(),
             self.name
         )
 
@@ -279,7 +279,7 @@ class Street(Location):
 
     def __str__(self):
         return '{0} {1}'.format(
-            STREET_ABBREVIATED_TYPES_DICT.get(self.street_type),
+            self.get_street_type_display(),
             self.name
         )
 

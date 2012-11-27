@@ -5,7 +5,7 @@ from django.conf import settings
 from mptt_geo.models import Location, Country, Region, City, Street
 
 if 'modeltranslation' in settings.INSTALLED_APPS:
-    from modeltranslation.translator import translator
+    from modeltranslation.translator import translator, NotRegistered
 else:
     translator = None
 
@@ -13,9 +13,12 @@ base_exclude = ['content_type', 'parent', 'active', 'creator', 'body',
                 'child_class', 'geoname_id', 'geoname_status', ]
 
 if translator:
-    trans_opts = translator.get_options_for_model(Location)
-    if 'body' in trans_opts.fields:
-        base_exclude += trans_opts.localized_fieldnames['body']
+    try:
+        trans_opts = translator.get_options_for_model(Location)
+        if 'body' in trans_opts.fields:
+            base_exclude += trans_opts.localized_fieldnames['body']
+    except NotRegistered:
+        pass
 
 
 class MetaBase:

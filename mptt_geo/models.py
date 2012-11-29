@@ -181,6 +181,10 @@ class Location(MPTTModel):
 
     def is_allowed(self, user, perm=None):
         """Checks permissions."""
+        base, model = perm.rsplit("_", 1)
+        model = "location"
+        perm = "_".join((base, model, ))
+
         if perm in ('mptt_geo.view_location',
                     'mptt_geo.browse_location', ):
             return True
@@ -225,9 +229,9 @@ class Region(Location):
 
     def is_allowed(self, user, perm=None):
         """Checks permissions."""
-        if perm == 'mptt_geo.add_location':
-            return user.is_authenticated()
-        return super(Region, self).is_allowed(perm, user)
+        #if perm == 'mptt_geo.add_location':
+        #    return user.is_authenticated()
+        return super(Region, self).is_allowed(user, perm)
 
 
 class City(Location):
@@ -260,7 +264,7 @@ class City(Location):
         """Checks permissions."""
         if perm == 'mptt_geo.add_location':
             return user.is_authenticated()
-        return super(City, self).is_allowed(perm, user)
+        return super(City, self).is_allowed(user, perm)
 
 
 class Street(Location):
@@ -293,7 +297,7 @@ class Street(Location):
         """Checks permissions."""
         if perm == 'mptt_geo.add_location':
             return False
-        return super(Street, self).is_allowed(perm, user)
+        return super(Street, self).is_allowed(user, perm)
 
 
 class LocationItem(models.Model):

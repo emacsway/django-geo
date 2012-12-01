@@ -19,6 +19,9 @@ class RealQuerySet(QuerySet):
         for item in super(RealQuerySet, self).__iter__():
             yield item.get_real()
 
+    def get(self, *args, **kwargs):
+        return super(RealQuerySet, self).get(*args, **kwargs).get_real()
+
 
 class LocationManager(TreeManager):
     """Custom manager for locations """

@@ -229,8 +229,8 @@ class Region(Location):
 
     def is_allowed(self, user, perm=None):
         """Checks permissions."""
-        #if perm == 'mptt_geo.add_location':
-        #    return user.is_authenticated()
+        if perm == 'mptt_geo.add_location':
+            return user.is_authenticated()
         return super(Region, self).is_allowed(user, perm)
 
 

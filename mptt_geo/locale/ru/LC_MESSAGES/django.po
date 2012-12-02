@@ -151,6 +151,9 @@ msgid "farm"
 msgstr "хутор"
 
 msgid "Locations"
+msgstr "Расположения"
+
+msgid "Location"
 msgstr "Расположение"
 
 msgid "Subitems (%(type_name_plural)s)"

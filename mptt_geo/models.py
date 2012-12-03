@@ -6,6 +6,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 from django.core import urlresolvers
 from django.db import models
+from django.utils.encoding import force_unicode
 from django.utils.translation import ugettext as _
 from mptt.models import MPTTModel
 
@@ -158,6 +159,17 @@ class Location(MPTTModel):
 
     def get_absolute_url(self):
         return urlresolvers.reverse('geo_location_detail', args=[self.pk])
+
+    def get_hierarchical_name(self, sep=', ', reverse=True):
+        """returns children QuerySet instance for given parent_id"""
+        parts = []
+        current = self.get_real()
+        while current.parent:
+            parts.append(force_unicode(current))
+            current = current.parent.get_real()
+        if reverse:
+            parts.reverse()
+        return sep.join(parts)
 
     def get_real(self):  # or get_downcast(self)
         """returns instance of real class"""

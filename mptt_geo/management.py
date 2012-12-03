@@ -33,6 +33,6 @@ def create_root_node(app, created_models, verbosity, **kwargs):
             'active': True,
         })
         root.save()
-        settings.CATEGORY_ROOT = root.pk
+        settings.LOCATION_ROOT = root.pk
 
 signals.post_syncdb.connect(create_root_node, sender=models)

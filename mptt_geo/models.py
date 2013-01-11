@@ -359,7 +359,10 @@ def geo_location_new(sender, instance, **kwargs):
                 "type": instance._meta.verbose_name,
             })
 
-models.signals.post_save.connect(geo_location_new, sender=Location)
+models.signals.post_save.connect(geo_location_new, sender=Country)
+models.signals.post_save.connect(geo_location_new, sender=Region)
+models.signals.post_save.connect(geo_location_new, sender=City)
+models.signals.post_save.connect(geo_location_new, sender=Street)
 
 # Python 2.* compatible
 try:

@@ -11,6 +11,7 @@ class LocationAdmin(admin.ModelAdmin):
     search_fields = ('name', 'name_ascii', 'body', )
     list_filter = ('active', )
     list_editable = ('active', )
+    raw_id_fields = ('creator', )
 
     def display_as_node(self, obj):
         return  '{0} {1}'.format(

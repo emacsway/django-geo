@@ -4,9 +4,9 @@ from mptt_geo import models
 
 
 class LocationAdmin(admin.ModelAdmin):
-    list_display = ('id', 'display_as_node', 'parent', 'lft', 'rght',
-                    'level', 'tree_id', 'active', )
-    list_display_links = ('id', 'display_as_node', )
+    list_display = ('id', 'display_as_node', 'name', 'parent', 'lft',
+                    'rght', 'level', 'tree_id', 'active', )
+    list_display_links = ('id', 'display_as_node', 'name', )
     #ordering = ('tree_id', 'lft', )
     search_fields = ('name', 'name_ascii', 'body', )
     list_filter = ('active', )

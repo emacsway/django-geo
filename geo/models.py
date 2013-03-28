@@ -8,14 +8,13 @@ from django.core import urlresolvers
 from django.db import models
 from django.utils.encoding import force_unicode
 from django.utils.translation import ugettext as _
-from mptt.models import MPTTModel
 
 from .managers import LocationManager
 
 try:
     from tree_select.db_fields import TreeForeignKey
 except ImportError:
-    from mptt.fields import TreeForeignKey
+    TreeForeignKey = models.ForeignKey
 
 if "notification" in settings.INSTALLED_APPS:
     from notification import models as notification
@@ -85,7 +84,7 @@ GEONAME_STATUSES = (
 
 
 # TODO: Add django-versioning here
-class Location(MPTTModel):
+class Location(models.Model):
     """Base location model"""
     content_type = models.ForeignKey(
         ContentType,
@@ -138,7 +137,7 @@ class Location(MPTTModel):
     objects = LocationManager()
 
     class Meta:
-        ordering = ['tree_id', 'lft']
+        ordering = ['name', ]
         unique_together = (('parent', 'name', ), ('parent', 'name_ascii', ), )
         verbose_name = _("location")
         verbose_name_plural = _("locations")
@@ -171,6 +170,22 @@ class Location(MPTTModel):
             parts.reverse()
         return sep.join(parts)
 
+    def get_ancestors(self):
+        """returns ancestors"""
+        parts = []
+        current = self
+        while current:
+            current = current.get_real()
+            parts.append(current)
+            current = current.parent
+        parts.reverse()
+        parts.pop()
+        return parts
+
+    def get_children(self):
+        """Fix for MTI"""
+        return Location.objects.filter(parent=self)
+
     def get_real(self):  # or get_downcast(self)
         """returns instance of real class"""
         model = self.content_type.model_class()
@@ -182,14 +197,7 @@ class Location(MPTTModel):
         """Returns child class"""
         if self.child_class:
             return models.get_model(*self.child_class.rsplit('.', 1))
-        return models.get_model('mptt_geo', 'country')
-
-    def get_children_tmp(self):
-        """Fix for MTI"""
-        if self.__class__ != Location:  # It's a sub-model
-            return Location.get_children(self.location_ptr)
-        else:
-            return super(Location, self).get_children()
+        return models.get_model('geo', 'country')
 
     def is_allowed(self, user, perm=None):
         """Checks permissions."""
@@ -197,13 +205,13 @@ class Location(MPTTModel):
         model = "location"
         perm = "_".join((base, model, ))
 
-        if perm in ('mptt_geo.view_location',
-                    'mptt_geo.browse_location', ):
+        if perm in ('geo.view_location',
+                    'geo.browse_location', ):
             return True
-        if perm == 'mptt_geo.add_location':
+        if perm == 'geo.add_location':
             return False
-        if perm in ('mptt_geo.change_location',
-                    'mptt_geo.delete_location', ):
+        if perm in ('geo.change_location',
+                    'geo.delete_location', ):
             return False
         return False
 
@@ -212,6 +220,8 @@ class Country(Location):
     """Country model"""
     iso_alpha2 = models.CharField(max_length=2, unique=True)
     iso_alpha3 = models.CharField(max_length=3, unique=True)
+
+    objects = LocationManager()
 
     class Meta:
         verbose_name = _("country")
@@ -223,11 +233,13 @@ class Country(Location):
         # for USSR also republic
         if self.child_class:
             return models.get_model(*self.child_class.rsplit('.', 1))
-        return models.get_model('mptt_geo', 'region')
+        return models.get_model('geo', 'region')
 
 
 class Region(Location):
     """Region model"""
+
+    objects = LocationManager()
 
     class Meta:
         verbose_name = _("region")
@@ -237,11 +249,11 @@ class Region(Location):
         """Returns child class"""
         if self.child_class:
             return models.get_model(*self.child_class.rsplit('.', 1))
-        return models.get_model('mptt_geo', 'city')
+        return models.get_model('geo', 'city')
 
     def is_allowed(self, user, perm=None):
         """Checks permissions."""
-        if perm == 'mptt_geo.add_location':
+        if perm == 'geo.add_location':
             return user.is_authenticated()
         return super(Region, self).is_allowed(user, perm)
 
@@ -255,6 +267,8 @@ class City(Location):
         default='city',
         db_index=True
     )
+
+    objects = LocationManager()
 
     class Meta:
         verbose_name = _("city")
@@ -270,11 +284,11 @@ class City(Location):
         """Returns child class"""
         if self.child_class:
             return models.get_model(*self.child_class.rsplit('.', 1))
-        return models.get_model('mptt_geo', 'street')
+        return models.get_model('geo', 'street')
 
     def is_allowed(self, user, perm=None):
         """Checks permissions."""
-        if perm == 'mptt_geo.add_location':
+        if perm == 'geo.add_location':
             return user.is_authenticated()
         return super(City, self).is_allowed(user, perm)
 
@@ -288,6 +302,8 @@ class Street(Location):
         default='street',
         db_index=True
     )
+
+    objects = LocationManager()
 
     class Meta:
         verbose_name = _("street")
@@ -307,7 +323,7 @@ class Street(Location):
 
     def is_allowed(self, user, perm=None):
         """Checks permissions."""
-        if perm == 'mptt_geo.add_location':
+        if perm == 'geo.add_location':
             return False
         return super(Street, self).is_allowed(user, perm)
 
@@ -335,10 +351,6 @@ class LocationItem(models.Model):
 
     def __bytes__(self):
         return str(self).encode('utf-8')
-
-# Temporary fixing for MPTT & MTI
-# https://github.com/django-mptt/django-mptt/issues/197
-# Location._tree_manager._base_manager = None
 
 
 def geo_location_new(sender, instance, **kwargs):

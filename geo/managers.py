@@ -2,7 +2,6 @@ from __future__ import absolute_import, unicode_literals
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models.query import QuerySet
-from mptt.managers import TreeManager
 
 
 class RealQuerySet(QuerySet):
@@ -23,7 +22,7 @@ class RealQuerySet(QuerySet):
         return super(RealQuerySet, self).get(*args, **kwargs).get_real()
 
 
-class LocationManager(TreeManager):
+class LocationManager(models.Manager):
     """Custom manager for locations """
 
     def get_query_set(self):

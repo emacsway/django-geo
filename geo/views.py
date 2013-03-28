@@ -14,9 +14,8 @@ def location_detail(request, pk=None):
     location = get_object_or_404(Location, pk=pk, active=True).get_real()
     new_location = None
     form = None
-
     model_class = location.get_child_class()
-    if model_class and request.user.has_perm('mptt_geo.add_location',
+    if model_class and request.user.has_perm('geo.add_location',
                                              location):
         form_class = getattr(forms, '{0}Form'.format(model_class.__name__))
         form = form_class(request.POST or None)

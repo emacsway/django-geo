@@ -1,23 +1,16 @@
 from __future__ import absolute_import, unicode_literals
 from django.contrib import admin
-from mptt_geo import models
+from . import models
 
 
 class LocationAdmin(admin.ModelAdmin):
-    list_display = ('id', 'display_as_node', 'name', 'parent', 'lft',
-                    'rght', 'level', 'tree_id', 'active', )
-    list_display_links = ('id', 'display_as_node', 'name', )
-    #ordering = ('tree_id', 'lft', )
+    list_display = ('id', 'name', 'content_type', 'parent', 'active', )
+    list_display_links = ('id', 'name', )
     search_fields = ('name', 'name_ascii', 'body', )
-    list_filter = ('active', )
+    list_filter = ('active', 'content_type', )
     list_editable = ('active', )
     raw_id_fields = ('creator', )
 
-    def display_as_node(self, obj):
-        return  '{0} {1}'.format(
-            '>>>' * (obj.level),
-            str(obj)
-        )
 
 admin.site.register(models.Location, LocationAdmin)
 admin.site.register(models.Country, LocationAdmin)

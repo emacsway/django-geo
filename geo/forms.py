@@ -2,7 +2,7 @@ from __future__ import absolute_import, unicode_literals
 from django import forms
 from django.conf import settings
 
-from mptt_geo.models import Location, Country, Region, City, Street
+from .models import Location, Country, Region, City, Street
 
 if 'modeltranslation' in settings.INSTALLED_APPS:
     from modeltranslation.translator import translator, NotRegistered

@@ -1,4 +1,5 @@
 from __future__ import absolute_import, unicode_literals
+from django.conf import settings as dsettings
 from django.contrib.auth.models import User
 from django.core import urlresolvers
 from django.test import TestCase
@@ -6,6 +7,11 @@ from django.test import TestCase
 from . import settings
 from .models import Location
 from .forms import CountryForm
+
+if 'modeltranslation_ext' in dsettings.INSTALLED_APPS:
+    from modeltranslation_ext.utils import localize_fieldname
+else:
+    localize_fieldname = lambda x: x
 
 
 class GeoForUserTest(TestCase):
@@ -31,7 +37,7 @@ class GeoForUserTest(TestCase):
         )
         self.assertNotContains(
             response,
-            CountryForm().fields['name'].label
+            CountryForm().fields[localize_fieldname('name')].label
         )
 
     def test_add(self):
@@ -39,7 +45,7 @@ class GeoForUserTest(TestCase):
             urlresolvers.reverse(
                 'geo_location_detail',
                 kwargs={'pk': settings.LOCATION_ROOT, }
-            ), {'name': 'Ukraine',
+            ), {localize_fieldname('name'): 'Ukraine',
                 'name_ascii': 'Ukraine',
                 'iso_alpha2': 'UK',
                 'iso_alpha3': 'UKR',
@@ -75,7 +81,7 @@ class GeoAdminTest(TestCase):
         )
         self.assertContains(
             response,
-            CountryForm().fields['name'].label
+            CountryForm().fields[localize_fieldname('name')].label
         )
 
     def test_add(self):
@@ -83,7 +89,7 @@ class GeoAdminTest(TestCase):
             urlresolvers.reverse(
                 'geo_location_detail',
                 kwargs={'pk': settings.LOCATION_ROOT, }
-            ), {'name': 'Ukraine',
+            ), {localize_fieldname('name'): 'Ukraine',
                 'name_ascii': 'Ukraine',
                 'iso_alpha2': 'UK',
                 'iso_alpha3': 'UKR',

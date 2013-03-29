@@ -3,6 +3,7 @@
 {% load uni_form_tags %}
 {% load theme_tags %}
 {% load flag_tags %}
+{% load modeltranslation_ext_tags %}
 
 {% block head_title %}{% blocktrans %}Locations{% endblocktrans %}{% endblock %}
 
@@ -72,9 +73,9 @@
     <script type="text/javascript">
 
         $(function(){
-            $('#id_name').change(function(e){
+            $('#id_{{ "name"|localize_fieldname }}').change(function(e){
                 if (!$('#id_name_ascii').val()) {
-                    $('#id_name_ascii').val(downcode($('#id_name').val()));
+                    $('#id_name_ascii').val(downcode($('#id_{{ "name"|localize_fieldname }}').val()));
                 }
             });
         });

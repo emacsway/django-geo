@@ -15,17 +15,21 @@ base_exclude = ['content_type', 'parent', 'active', 'creator', 'body',
 if translator:
     try:
         trans_opts = translator.get_options_for_model(Location)
-        if 'body' in trans_opts.fields:
-            base_exclude += trans_opts.localized_fieldnames['body']
     except NotRegistered:
         pass
+    else:
+        if 'body' in trans_opts.fields:
+            base_exclude += [i.name for i in trans_opts.fields['body']]
+        from modeltranslation_ext.forms import TranslationBulkModelForm as ModelForm
+else:
+    ModelForm = forms.ModelForm
 
 
 class MetaBase:
     exclude = base_exclude
 
 
-class LocationForm(forms.ModelForm):
+class LocationForm(ModelForm):
     """Location form"""
 
     class Meta(MetaBase):

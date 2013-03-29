@@ -186,6 +186,19 @@ class Location(models.Model):
         """Fix for MTI"""
         return Location.objects.filter(parent=self)
 
+    def _descendants(self):
+        r = list(self.get_children())
+        for i in r:
+            r += i._descendants()
+        return r
+
+    def get_descendants(self, include_self=False):
+        r = []
+        if include_self:
+            r.append(self)
+        r += self._descendants()
+        return r
+
     def get_real(self):  # or get_downcast(self)
         """returns instance of real class"""
         model = self.content_type.model_class()
@@ -221,7 +234,7 @@ class Country(Location):
     iso_alpha2 = models.CharField(max_length=2, unique=True)
     iso_alpha3 = models.CharField(max_length=3, unique=True)
 
-    objects = LocationManager()
+    # objects = LocationManager()
 
     class Meta:
         verbose_name = _("country")
@@ -239,7 +252,7 @@ class Country(Location):
 class Region(Location):
     """Region model"""
 
-    objects = LocationManager()
+    # objects = LocationManager()
 
     class Meta:
         verbose_name = _("region")
@@ -268,7 +281,7 @@ class City(Location):
         db_index=True
     )
 
-    objects = LocationManager()
+    # objects = LocationManager()
 
     class Meta:
         verbose_name = _("city")
@@ -303,7 +316,7 @@ class Street(Location):
         db_index=True
     )
 
-    objects = LocationManager()
+    # objects = LocationManager()
 
     class Meta:
         verbose_name = _("street")

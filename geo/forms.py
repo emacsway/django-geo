@@ -13,14 +13,7 @@ base_exclude = ['content_type', 'parent', 'active', 'creator', 'body',
                 'child_class', 'geoname_id', 'geoname_status', ]
 
 if translator:
-    try:
-        trans_opts = translator.get_options_for_model(Location)
-    except NotRegistered:
-        pass
-    else:
-        if 'body' in trans_opts.fields:
-            base_exclude += [i.name for i in trans_opts.fields['body']]
-        from modeltranslation_ext.forms import TranslationBulkModelForm as ModelForm
+    from modeltranslation_ext.forms import TranslationBulkModelForm as ModelForm
 else:
     ModelForm = forms.ModelForm
 

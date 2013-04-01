@@ -25,7 +25,7 @@ class RealQuerySet(QuerySet):
 class LocationManager(models.Manager):
     """Custom manager for locations """
 
-    def get_queryset(self):
+    def get_query_set(self):
         """Returns a new QuerySet object."""
         return RealQuerySet(self.model, using=self._db)
 

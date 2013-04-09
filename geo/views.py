@@ -2,7 +2,7 @@ from __future__ import absolute_import, unicode_literals
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, render_to_response, redirect
 from django.template.context import RequestContext
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _
 
 from .models import Location
 from . import forms, settings

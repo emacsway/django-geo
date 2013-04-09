@@ -7,7 +7,7 @@ from django.contrib.contenttypes import generic
 from django.core import urlresolvers
 from django.db import models
 from django.utils.encoding import force_unicode
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _
 
 from .managers import LocationManager
 

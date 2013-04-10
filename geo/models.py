@@ -156,6 +156,10 @@ class Location(models.Model):
             )
         return super(Location, self).save(*args, **kwargs)
 
+    def delete(self, *a, **kw):
+        """Disallows to delete subclass instance without Location instance."""
+        return super(Location, self.get_base()).delete(*a, **kw)
+
     def get_absolute_url(self):
         return urlresolvers.reverse('geo_location_detail', args=[self.pk])
 
@@ -202,9 +206,18 @@ class Location(models.Model):
     def get_real(self):  # or get_downcast(self)
         """returns instance of real class"""
         model = self.content_type.model_class()
-        if model == self.__class__:
-            return self
-        return model.objects.get(pk=self.pk)
+        if model != type(self):
+            try:
+                return model.objects.get(pk=self.pk)
+            except model.DoesNotExist:
+                pass
+        return self
+
+    def get_base(self):
+        """Returns Location instance"""
+        if type(self) != Location:
+            return Location._base_manager.get(pk=self.pk)
+        return self
 
     def get_child_class(self):
         """Returns child class"""

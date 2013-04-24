@@ -1,6 +1,6 @@
 from __future__ import absolute_import, unicode_literals
 import sys
-from django.conf import settings
+from django.conf import settings as django_settings
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
@@ -9,6 +9,7 @@ from django.db import models
 from django.utils.encoding import force_unicode
 from django.utils.translation import ugettext_lazy as _
 
+from . import settings
 from .managers import LocationManager
 
 try:
@@ -16,7 +17,7 @@ try:
 except ImportError:
     TreeForeignKey = models.ForeignKey
 
-if "notification" in settings.INSTALLED_APPS:
+if "notification" in django_settings.INSTALLED_APPS:
     from notification import models as notification
 else:
     notification = None
@@ -82,6 +83,16 @@ GEONAME_STATUSES = (
     (GEONAME_INDEPENDENT, _('independent'), ),
 )
 
+"""
+Migration:
+!!! First, disable modeltranslation for model !!!
+# translator.register(Location, LocationTranslationOptions)
+from geo.models import Location
+Location.objects.get(pk=1).save()
+for obj in Location.objects.exclude(pk=1).order_by('parent__pk', 'pk').iterator():
+    obj.save()
+"""
+
 
 # TODO: Add django-versioning here
 class Location(models.Model):
@@ -92,6 +103,7 @@ class Location(models.Model):
         null=True,
         related_name="%(app_label)s_%(class)s_related"
     )
+    tree_path = models.CharField(_('Tree path'), max_length=255, editable=False, db_index=True)
     parent = TreeForeignKey(
         'self',
         verbose_name=_("parent node"),
@@ -154,7 +166,22 @@ class Location(models.Model):
             self.content_type = ContentType.objects.get_for_model(
                 self.__class__
             )
-        return super(Location, self).save(*args, **kwargs)
+
+        if self.pk:
+            old_tree_path = Location.objects.get(pk=self.pk).tree_path
+        else:
+            old_tree_path = None
+        super(Location, self).save(*args, **kwargs)
+
+        tree_path = str(self.pk).zfill(settings.PATH_DIGITS)
+        if self.parent:
+            tree_path = settings.PATH_SEPARATOR.join((self.parent.tree_path, tree_path))
+        self.tree_path = tree_path
+        Location.objects.filter(pk=self.pk).update(tree_path=self.tree_path)
+        if old_tree_path is not None and old_tree_path != tree_path:
+            for obj in Location.objects.filter(tree_path__startswith=old_tree_path).exclude(pk=self.pk).iterator():
+                Location.objects.filter(pk=obj.pk).update(tree_path=obj.tree_path.replace(old_tree_path, tree_path))
+        return self
 
     def delete(self, *a, **kw):
         """Disallows to delete subclass instance without Location instance."""
@@ -196,12 +223,18 @@ class Location(models.Model):
             r += i._descendants()
         return r
 
-    def get_descendants(self, include_self=False):
+    def get_descendants_recursive(self, include_self=False):
         r = []
         if include_self:
             r.append(self)
         r += self._descendants()
         return r
+
+    def get_descendants(self, include_self=False):
+        qs = type(self).objects.filter(tree_path__startswith=self.tree_path)
+        if not include_self:
+            qs = qs.exclude(pk=self.pk)
+        return qs
 
     def get_real(self):  # or get_downcast(self)
         """returns instance of real class"""

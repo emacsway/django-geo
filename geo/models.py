@@ -231,7 +231,7 @@ class Location(models.Model):
         return r
 
     def get_descendants(self, include_self=False):
-        qs = type(self).objects.filter(tree_path__startswith=self.tree_path)
+        qs = Location.objects.filter(tree_path__startswith=self.tree_path)
         if not include_self:
             qs = qs.exclude(pk=self.pk)
         return qs

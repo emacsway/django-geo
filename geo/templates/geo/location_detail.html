@@ -22,7 +22,7 @@
     </div>
 
     <h1>{{ object }} ({{ opts.verbose_name }})</h1>
-    {% if user.is_authenticated %}
+    {% if user.is_authenticated and object.creator %}
     <div class="form-toggle">
         <p><span id="flag-toggle">{% silk "flag_red" %}{% trans "Flag as incorrect" %}</span></p>
         <div id="flag-form" style="display: none;">

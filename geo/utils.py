@@ -1,5 +1,8 @@
 from django.core import urlresolvers
-from tree_select.utils import add_helper
+try:
+    from tree_select.utils import add_helper
+except ImportError:
+    add_helper = None
 
 
 def add_geo_helper(*args, **kwargs):

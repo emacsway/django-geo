@@ -111,7 +111,7 @@ class Location(models.Model):
         null=True,  # null for top level
         related_name="children"
     )
-    name = models.CharField(_("official name"), max_length=255, db_index=True)
+    name = models.CharField(_("official name"), max_length=255, db_index=True, null=True)
     name_ascii = models.CharField(
         _("ascii name"),
         max_length=255,

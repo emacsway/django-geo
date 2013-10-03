@@ -7,6 +7,7 @@ from .models import Location, Country, Region, City, Street
 
 if 'modeltranslation' in settings.INSTALLED_APPS:
     from modeltranslation.translator import translator, NotRegistered
+    from modeltranslation.utils import get_translation_fields
 else:
     translator = None
 
@@ -39,6 +40,10 @@ class LocationForm(ModelForm):
         Calls the instance's validate_unique() method and updates the form's
         validation errors if any were raised.
         """
+        if translator:
+            for fname in get_translation_fields('name'):
+                if getattr(self.instance, fname, None) == "":
+                    setattr(self.instance, fname, None)
         try:
             self.instance.validate_unique()
         except ValidationError as e:

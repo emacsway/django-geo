@@ -93,6 +93,7 @@ class GeoAdminTest(TestCase):
                 'name_ascii': 'Ukraine',
                 'iso_alpha2': 'UK',
                 'iso_alpha3': 'UKR',
+                'parent': settings.LOCATION_ROOT,
             }
         )
         self.assertEqual(response.status_code, 302)

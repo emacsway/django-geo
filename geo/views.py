@@ -17,15 +17,16 @@ def location_detail(request, pk=None):
     model_class = location.get_child_class()
     if model_class and request.user.has_perm('geo.add_location',
                                              location):
+        initial = {'parent': location, }
         form_class = getattr(forms, '{0}Form'.format(model_class.__name__))
-        form = form_class(request.POST or None, initial={'parent': location, })
+        form = form_class(request.POST or None, initial=initial)
         if request.method == 'POST' and form.is_valid():
             new_location = form.save(commit=False)
             new_location.creator = request.user
             # for large trees we can save data asynchronously
             new_location.save()
             form.save_m2m()
-            form = form_class(None, initial={'parent': location.pk, })
+            form = form_class(None, initial=initial)
             messages.info(request,
                           _("Information has been saved successfully."))
             return redirect(new_location.get_absolute_url())

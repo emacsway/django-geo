@@ -10,7 +10,7 @@ from . import forms, settings
 
 def location_detail(request, pk=None):
     """Shows detail info for given location"""
-    pk = pk or settings.LOCATION_ROOT
+    pk = request.POST.get('parent') or pk or settings.LOCATION_ROOT
     location = get_object_or_404(Location, pk=pk, active=True).get_real()
     new_location = None
     form = None
@@ -18,11 +18,10 @@ def location_detail(request, pk=None):
     if model_class and request.user.has_perm('geo.add_location',
                                              location):
         form_class = getattr(forms, '{0}Form'.format(model_class.__name__))
-        form = form_class(request.POST or None)
+        form = form_class(request.POST or None, initial={'parent': location, })
         if request.method == 'POST' and form.is_valid():
             new_location = form.save(commit=False)
             new_location.creator = request.user
-            new_location.parent = location
             # for large trees we can save data asynchronously
             new_location.save()
             form.save_m2m()

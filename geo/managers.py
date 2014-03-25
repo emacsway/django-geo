@@ -4,30 +4,43 @@ from django.db import models
 from django.db.models.query import QuerySet
 
 
-class RealQuerySet(QuerySet):
+class PolymorphicQuerySet(QuerySet):
     """Custom QuerySet for real instances."""
 
-    def __getitem__(self, k):
-        result = super(RealQuerySet, self).__getitem__(k)
-        if isinstance(result, models.Model):
-            return result.get_real()
-        else:
-            return result
+    _polymorphic = True
 
-    def __iter__(self):
-        for item in super(RealQuerySet, self).__iter__():
-            yield item.get_real()
+    def polymorphic(self, val=True):
+        c = self._clone()
+        c._polymorphic = val
+        return c
 
-    def get(self, *args, **kwargs):
-        return super(RealQuerySet, self).get(*args, **kwargs).get_real()
+    def iterator(self):
+        for obj in super(PolymorphicQuerySet, self).iterator():
+            yield obj.get_real() if self._polymorphic and hasattr(obj, 'get_real') else obj
+
+    def _clone(self):
+        c = super(PolymorphicQuerySet, self)._clone()
+        c._polymorphic = self._polymorphic
+        return c
 
 
-class LocationManager(models.Manager):
-    """Custom manager for locations """
-
+class PolymorphicManager(models.Manager):
     def get_query_set(self):
         """Returns a new QuerySet object."""
-        return RealQuerySet(self.model, using=self._db)
+        qs = super(PolymorphicManager, self).get_query_set()
+        if not isinstance(qs.__class__, PolymorphicQuerySet):
+            class NewPolymorphicQuerySet(PolymorphicQuerySet, qs.__class__):
+                pass
+            qs.__class__ = NewPolymorphicQuerySet
+        return PolymorphicQuerySet(self.model, using=self._db)
+
+    def polymorphic(self, val):
+        return self.get_query_set().polymorphic(val)
+
+
+class LocationManager(PolymorphicManager):
+    """Custom manager for locations """
+    # use_for_related_fields = True
 
     def update_locations(self, obj, locations):
         """ updates the locations for the given object """
@@ -59,5 +72,4 @@ class LocationManager(models.Manager):
 
     def get_for_object(self, obj):
         ctype = ContentType.objects.get_for_object(obj)
-        return self.filter(items__content_type=ctype,
-            object_id=obj.pk).distinct()
+        return self.filter(items__content_type=ctype, object_id=obj.pk).distinct()

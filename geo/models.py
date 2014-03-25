@@ -6,6 +6,9 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 from django.core import urlresolvers
 from django.db import models
+from django.db.models.base import ModelBase
+from django.db.models.fields.related import ReverseSingleRelatedObjectDescriptor
+from django.db.models.query import QuerySet
 from django.utils.encoding import force_unicode
 from django.utils.translation import ugettext_lazy as _
 
@@ -93,9 +96,25 @@ for obj in Location.objects.exclude(pk=1).order_by('parent__pk', 'pk').iterator(
     obj.save()
 """
 
+class ParentReverseSingleRelatedObjectDescriptor(ReverseSingleRelatedObjectDescriptor):
+    def __get__(self, instance, instance_type=None):
+        if instance is None:
+            return self
+        obj = super(ParentReverseSingleRelatedObjectDescriptor, self).__get__(instance, instance_type)
+        return obj.get_base() if hasattr(obj, 'get_base') else obj
+        
+
+class LocationBase(ModelBase):
+    def __new__(cls, name, bases, attrs):
+        new_class = super(LocationBase, cls).__new__(cls, name, bases, attrs)
+        if hasattr(new_class, '_meta'):
+            for parent in new_class._meta.parents.values():
+                getattr(new_class, parent.name).__class__ = ParentReverseSingleRelatedObjectDescriptor
+        return new_class
+
 
 # TODO: Add django-versioning here
-class Location(models.Model):
+class Location(LocationBase(b'NewBase', (models.Model, ), {})):
     """Base location model"""
     content_type = models.ForeignKey(
         ContentType,
@@ -183,10 +202,6 @@ class Location(models.Model):
                 Location.objects.filter(pk=obj.pk).update(tree_path=obj.tree_path.replace(old_tree_path, tree_path))
         return self
 
-    def delete(self, *a, **kw):
-        """Disallows to delete subclass instance without Location instance."""
-        return super(Location, self.get_base()).delete(*a, **kw)
-
     def get_absolute_url(self):
         return urlresolvers.reverse('geo_location_detail', args=[self.pk])
 
@@ -249,7 +264,7 @@ class Location(models.Model):
     def get_base(self):
         """Returns Location instance"""
         if type(self) != Location:
-            return Location._base_manager.get(pk=self.pk)
+            return QuerySet(Location).using(Location.objects.db).get(pk=self.pk)
         return self
 
     def get_child_class(self):

@@ -18,8 +18,8 @@ class PolymorphicQuerySet(QuerySet):
         for obj in super(PolymorphicQuerySet, self).iterator():
             yield obj.get_real() if self._polymorphic and hasattr(obj, 'get_real') else obj
 
-    def _clone(self):
-        c = super(PolymorphicQuerySet, self)._clone()
+    def _clone(self, *args, **kwargs):
+        c = super(PolymorphicQuerySet, self)._clone(*args, **kwargs)
         c._polymorphic = self._polymorphic
         return c
 

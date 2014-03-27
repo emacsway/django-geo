@@ -12,7 +12,7 @@ from django.db.models.query import QuerySet
 from django.utils.encoding import force_unicode
 from django.utils.translation import ugettext_lazy as _
 
-from . import settings
+from .conf import settings
 from .managers import LocationManager
 
 try:

@@ -22,7 +22,7 @@ except ImproperlyConfigured:
 
 
 def create_root_node(app, created_models, verbosity, **kwargs):
-    from . import settings
+    from .conf import settings
     try:
         Location.objects.get(pk=settings.LOCATION_ROOT)
     except Location.DoesNotExist:

@@ -1,14 +1,13 @@
 from __future__ import absolute_import, unicode_literals
-from django.conf import settings as dsettings
 from django.contrib.auth.models import User
 from django.core import urlresolvers
 from django.test import TestCase
 
-from . import settings
+from .conf import settings
 from .models import Location
 from .forms import CountryForm
 
-if 'modeltranslation_ext' in dsettings.INSTALLED_APPS:
+if 'modeltranslation_ext' in settings.INSTALLED_APPS:
     from modeltranslation_ext.utils import localize_fieldname
 else:
     localize_fieldname = lambda x: x

@@ -4,8 +4,9 @@ from django.shortcuts import get_object_or_404, render_to_response, redirect
 from django.template.context import RequestContext
 from django.utils.translation import ugettext_lazy as _
 
+from .conf import settings
 from .models import Location
-from . import forms, settings
+from . import forms
 
 
 def location_detail(request, pk=None):

@@ -1,41 +1,6 @@
 from __future__ import absolute_import, unicode_literals
 from django.contrib.contenttypes.models import ContentType
-from django.db import models
-from django.db.models.query import QuerySet
-
-
-class PolymorphicQuerySet(QuerySet):
-    """Custom QuerySet for real instances."""
-
-    _polymorphic = True
-
-    def polymorphic(self, val=True):
-        c = self._clone()
-        c._polymorphic = val
-        return c
-
-    def iterator(self):
-        for obj in super(PolymorphicQuerySet, self).iterator():
-            yield obj.get_real() if self._polymorphic and hasattr(obj, 'get_real') else obj
-
-    def _clone(self, *args, **kwargs):
-        c = super(PolymorphicQuerySet, self)._clone(*args, **kwargs)
-        c._polymorphic = self._polymorphic
-        return c
-
-
-class PolymorphicManager(models.Manager):
-    def get_query_set(self):
-        """Returns a new QuerySet object."""
-        qs = super(PolymorphicManager, self).get_query_set()
-        if not isinstance(qs.__class__, PolymorphicQuerySet):
-            class NewPolymorphicQuerySet(PolymorphicQuerySet, qs.__class__):
-                pass
-            qs.__class__ = NewPolymorphicQuerySet
-        return PolymorphicQuerySet(self.model, using=self._db)
-
-    def polymorphic(self, val):
-        return self.get_query_set().polymorphic(val)
+from django_ext.db.models.polymorphic import PolymorphicManager
 
 
 class LocationManager(PolymorphicManager):

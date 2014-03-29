@@ -6,11 +6,9 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 from django.core import urlresolvers
 from django.db import models
-from django.db.models.base import ModelBase
-from django.db.models.fields.related import ReverseSingleRelatedObjectDescriptor
-from django.db.models.query import QuerySet
 from django.utils.encoding import force_unicode
 from django.utils.translation import ugettext_lazy as _
+from django_ext.db.models.polymorphic import PolymorphicModel
 
 from .conf import settings
 from .managers import LocationManager
@@ -96,32 +94,10 @@ for obj in Location.objects.exclude(pk=1).order_by('parent__pk', 'pk').iterator(
     obj.save()
 """
 
-class ParentReverseSingleRelatedObjectDescriptor(ReverseSingleRelatedObjectDescriptor):
-    def __get__(self, instance, instance_type=None):
-        if instance is None:
-            return self
-        obj = super(ParentReverseSingleRelatedObjectDescriptor, self).__get__(instance, instance_type)
-        return obj.get_base() if hasattr(obj, 'get_base') else obj
-        
-
-class LocationBase(ModelBase):
-    def __new__(cls, name, bases, attrs):
-        new_class = super(LocationBase, cls).__new__(cls, name, bases, attrs)
-        if hasattr(new_class, '_meta'):
-            for parent in new_class._meta.parents.values():
-                getattr(new_class, parent.name).__class__ = ParentReverseSingleRelatedObjectDescriptor
-        return new_class
-
 
 # TODO: Add django-versioning here
-class Location(LocationBase(b'NewBase', (models.Model, ), {})):
+class Location(PolymorphicModel):
     """Base location model"""
-    content_type = models.ForeignKey(
-        ContentType,
-        editable=False,
-        null=True,
-        related_name="%(app_label)s_%(class)s_related"
-    )
     tree_path = models.CharField(_('Tree path'), max_length=255, editable=False, db_index=True)
     parent = TreeForeignKey(
         'self',
@@ -250,22 +226,6 @@ class Location(LocationBase(b'NewBase', (models.Model, ), {})):
         if not include_self:
             qs = qs.exclude(pk=self.pk)
         return qs
-
-    def get_real(self):  # or get_downcast(self)
-        """returns instance of real class"""
-        model = self.content_type.model_class()
-        if model != type(self):
-            try:
-                return model.objects.get(pk=self.pk)
-            except model.DoesNotExist:
-                pass
-        return self
-
-    def get_base(self):
-        """Returns Location instance"""
-        if type(self) != Location:
-            return QuerySet(Location).using(Location.objects.db).get(pk=self.pk)
-        return self
 
     def get_child_class(self):
         """Returns child class"""

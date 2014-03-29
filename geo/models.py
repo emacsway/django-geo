@@ -9,14 +9,9 @@ from django.db import models
 from django.utils.encoding import force_unicode
 from django.utils.translation import ugettext_lazy as _
 from django_ext.db.models.polymorphic import PolymorphicModel
+from django_ext.db.models.tree import MpModel
 
-from .conf import settings
 from .managers import LocationManager
-
-try:
-    from tree_select.db_fields import TreeForeignKey
-except ImportError:
-    TreeForeignKey = models.ForeignKey
 
 if "notification" in django_settings.INSTALLED_APPS:
     from notification import models as notification
@@ -96,16 +91,8 @@ for obj in Location.objects.exclude(pk=1).order_by('parent__pk', 'pk').iterator(
 
 
 # TODO: Add django-versioning here
-class Location(PolymorphicModel):
+class Location(PolymorphicModel, MpModel):
     """Base location model"""
-    tree_path = models.CharField(_('Tree path'), max_length=255, editable=False, db_index=True)
-    parent = TreeForeignKey(
-        'self',
-        verbose_name=_("parent node"),
-        blank=True,
-        null=True,  # null for top level
-        related_name="children"
-    )
     name = models.CharField(_("official name"), max_length=255, db_index=True, null=True)
     name_ascii = models.CharField(
         _("ascii name"),
@@ -152,80 +139,8 @@ class Location(PolymorphicModel):
     def __str__(self):
         return self.name
 
-    def __bytes__(self):
-        return str(self).encode('utf-8')
-
-    def save(self, *args, **kwargs):
-        """Sets content_type and calls parent method."""
-        if not self.content_type:
-            self.content_type = ContentType.objects.get_for_model(
-                self.__class__
-            )
-
-        if self.pk:
-            old_tree_path = Location.objects.get(pk=self.pk).tree_path
-        else:
-            old_tree_path = None
-        super(Location, self).save(*args, **kwargs)
-
-        tree_path = str(self.pk).zfill(settings.PATH_DIGITS)
-        if self.parent:
-            tree_path = settings.PATH_SEPARATOR.join((self.parent.tree_path, tree_path))
-        self.tree_path = tree_path
-        Location.objects.filter(pk=self.pk).update(tree_path=self.tree_path)
-        if old_tree_path is not None and old_tree_path != tree_path:
-            for obj in Location.objects.filter(tree_path__startswith=old_tree_path).exclude(pk=self.pk).iterator():
-                Location.objects.filter(pk=obj.pk).update(tree_path=obj.tree_path.replace(old_tree_path, tree_path))
-        return self
-
     def get_absolute_url(self):
         return urlresolvers.reverse('geo_location_detail', args=[self.pk])
-
-    def get_hierarchical_name(self, sep=', ', reverse=True):
-        """returns children QuerySet instance for given parent_id"""
-        parts = []
-        current = self.get_real()
-        while current.parent:
-            parts.append(force_unicode(current))
-            current = current.parent.get_real()
-        if reverse:
-            parts.reverse()
-        return sep.join(parts)
-
-    def get_ancestors(self):
-        """returns ancestors"""
-        parts = []
-        current = self
-        while current:
-            current = current.get_real()
-            parts.append(current)
-            current = current.parent
-        parts.reverse()
-        parts.pop()
-        return parts
-
-    def get_children(self):
-        """Fix for MTI"""
-        return Location.objects.filter(parent=self)
-
-    def _descendants(self):
-        r = list(self.get_children())
-        for i in r:
-            r += i._descendants()
-        return r
-
-    def get_descendants_recursive(self, include_self=False):
-        r = []
-        if include_self:
-            r.append(self)
-        r += self._descendants()
-        return r
-
-    def get_descendants(self, include_self=False):
-        qs = Location.objects.filter(tree_path__startswith=self.tree_path)
-        if not include_self:
-            qs = qs.exclude(pk=self.pk)
-        return qs
 
     def get_child_class(self):
         """Returns child class"""
@@ -383,9 +298,6 @@ class LocationItem(models.Model):
     def __str__(self):
         return '{0} [{1}]'.format(self.object, self.location)
 
-    def __bytes__(self):
-        return str(self).encode('utf-8')
-
 
 def geo_location_new(sender, instance, **kwargs):
     if isinstance(instance, Location):
@@ -418,4 +330,4 @@ except NameError:
 else:
     for cls in (Location, City, Street, LocationItem, ):
         cls.__unicode__ = cls.__str__
-        cls.__str__ = cls.__bytes__
+        cls.__str__ = lambda self: self.__unicode__().encode('utf-8')

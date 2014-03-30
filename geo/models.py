@@ -6,7 +6,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 from django.core import urlresolvers
 from django.db import models
-from django.utils.encoding import force_unicode
+from django.utils.encoding import force_text
 from django.utils.translation import ugettext_lazy as _
 from django_ext.db.models.polymorphic import PolymorphicModel
 from django_ext.db.models.tree import MpModel
@@ -137,7 +137,7 @@ class Location(PolymorphicModel, MpModel):
         verbose_name_plural = _("locations")
 
     def __str__(self):
-        return self.name
+        return force_text(self.name)
 
     def get_absolute_url(self):
         return urlresolvers.reverse('geo_location_detail', args=[self.pk])
@@ -281,7 +281,7 @@ class LocationItem(models.Model):
     location = models.ForeignKey(
         Location,
         verbose_name=_("location"),
-        related_name="location_items"
+        related_name="items"
     )
     content_type = models.ForeignKey(
         ContentType,

@@ -1,1 +1,6 @@
 Django geo.
+
+Dependences:
+
+- https://bitbucket.org/emacsway/django-ext
+- https://bitbucket.org/emacsway/django-tree-select

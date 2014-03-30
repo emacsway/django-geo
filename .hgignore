@@ -2,9 +2,6 @@
 \.swp$
 \.orig$
 \.diff$
-\env1$
-\env2$
-\env3$
 ^\.\#
 ^\#
 ^etags$
@@ -15,3 +12,5 @@
 ^\.settings/
 .autosave$
 ^\.search/
+^VCSREV$
+^django_geo.egg-info$

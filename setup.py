@@ -20,6 +20,10 @@ setup(
     long_description=open(os.path.join(os.path.dirname(__file__), 'README')).read(),
     license = "BSD License",
     keywords = "django",
+    dependency_links=[
+        'hg+https://bitbucket.org/emacsway/django-ext#egg=django-ext',
+        'hg+https://bitbucket.org/emacsway/django-tree-select#egg=django-tree-select',
+    ],
     classifiers = [
         'Development Status :: 5 - Production/Stable',
         'Environment :: Web Environment',

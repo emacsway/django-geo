@@ -47,7 +47,7 @@ class LocationForm(ModelForm):
         try:
             self.instance.validate_unique()
         except ValidationError as e:
-            self._update_errors(e.message_dict)
+            self._update_errors(e)
 
 
 class CountryForm(LocationForm):
